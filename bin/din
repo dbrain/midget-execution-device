@@ -16,7 +16,7 @@ class DinPopupMenu(gtk.Menu):
         self.quit_menuitem.show_all()
         self.append(self.quit_menuitem)
 
-    def set_quit_handler(self, handler):
+    def onquit(self, handler):
         self.quit_menuitem.connect("activate", handler)
 
 class DinWindow(gtk.Window):
@@ -67,7 +67,7 @@ def main():
     window.connect("delete-event", window_deleteevent(window))
 
     popupmenu = DinPopupMenu()
-    popupmenu.set_quit_handler(gtk.main_quit)
+    popupmenu.onquit(gtk.main_quit)
 
     statusicon = gtk.status_icon_new_from_stock(gtk.STOCK_OPEN)
     statusicon.set_tooltip(TITLE)
