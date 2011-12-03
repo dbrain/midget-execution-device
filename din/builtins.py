@@ -1,6 +1,8 @@
+from subprocess import check_call, STDOUT
+
 def cmd_invoke(*args):
     def invoke(*args2):
-        print args
+        check_call(args + args2)
     return invoke
 
 BUILTINS = {
