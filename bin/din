@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+
+import sys
+import gtk
+
+APP_NAME = "din"
+APP_VERSION = (0, 1, 0)
+
+TITLE = "%s v%d.%d.%d" % ((APP_NAME,) + APP_VERSION)
+
+class DinPopupMenu(gtk.Menu):
+    def __init__(self):
+        gtk.Menu.__init__(self)
+
+        self.quit_menuitem = gtk.MenuItem("_Quit")
+        self.quit_menuitem.show_all()
+        self.append(self.quit_menuitem)
+
+    def set_quit_handler(self, handler):
+        self.quit_menuitem.connect("activate", handler)
+
+class DinWindow(gtk.Window):
+    def __init__(self):
+        gtk.Window.__init__(self)
+        
+        self.entry = gtk.Entry()
+        self.entry.connect("key-release-event", self.entry_keyrelease)
+        self.button = gtk.Button("Go")
+
+        hbox = gtk.HBox(False, 0)
+        hbox.pack_start(self.entry, True, True, 0)
+        hbox.pack_start(self.button, False, False, 0)
+
+        self.add(hbox)
+
+    def show(self):
+        self.entry.select_region(0, -1)
+        gtk.Window.show(self)
+
+    def entry_keyrelease(self, widget, event):
+        if event.keyval == gtk.gdk.keyval_from_name("Escape"):
+            self.hide()
+
+def toggle_visible_handler(widget):
+    def impl(sender, *args):
+        if widget.get_visible():
+            widget.hide()
+        else:
+            widget.show()
+    return impl
+
+def window_deleteevent(window):
+    return toggle_visible_handler(window)
+
+def statusicon_activate(window):
+    return toggle_visible_handler(window)
+
+def statusicon_popupmenu(menu):
+    def impl(sender, button, timestamp):
+        menu.popup(None, None, None, button, timestamp)
+    return impl
+
+def main():
+    window = DinWindow()
+    window.set_title(TITLE)
+    window.set_position(gtk.WIN_POS_CENTER)
+    window.connect("delete-event", window_deleteevent(window))
+
+    popupmenu = DinPopupMenu()
+    popupmenu.set_quit_handler(gtk.main_quit)
+
+    statusicon = gtk.status_icon_new_from_stock(gtk.STOCK_OPEN)
+    statusicon.set_tooltip(TITLE)
+    statusicon.connect("activate", statusicon_activate(window))
+    statusicon.connect("popup-menu", statusicon_popupmenu(popupmenu))
+
+    window.show_all()
+    statusicon.set_visible(True)
+
+    gtk.main()
+
+if __name__ == "__main__":
+    main()
+
