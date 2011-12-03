@@ -1,6 +1,6 @@
 import gtk
 
-NAME = "din"
+NAME = "Midget Execution Device"
 VERSION = (0, 1, 0)
 
 from .bootstrap import run
