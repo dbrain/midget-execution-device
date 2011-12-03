@@ -1,13 +1,27 @@
 #!/usr/bin/env python
 
 import sys
-import gtk
+import os
 import re
+
+import gtk
 
 APP_NAME = "din"
 APP_VERSION = (0, 1, 0)
 
 TITLE = "%s v%d.%d.%d" % ((APP_NAME,) + APP_VERSION)
+
+class DinCommands(object):
+    def __init__(self):
+        object.__init__(self)
+
+        self.commands = {}
+
+    def add(self, command, handler):
+        self.commands[command] = handler
+
+    def __getitem__(self, command):
+        return self.commands[command]
 
 class DinEndOfCommandException(Exception):
     pass
@@ -139,9 +153,11 @@ class DinEngine(object):
         object.__init__(self)
 
         self.commandparser = DinCommandParser()
+        self.commands = DinCommands()
 
     def execute(self, command):
-        print self.commandparser.parse(command)
+        args = self.commandparser.parse(command)
+        self.commands[args[0]](*args[1:])
 
 class DinPopupMenu(gtk.Menu):
     def __init__(self):
@@ -206,8 +222,28 @@ def statusicon_popupmenu(menu):
         menu.popup(None, None, None, button, timestamp)
     return impl
 
+def cmd_invoke(*args):
+    def invoke(*args2):
+        print args
+    return invoke
+
+BUILTINS = {
+    "invoke": cmd_invoke
+}
+
+def configure(engine):
+    filename = os.path.join(os.getenv("HOME"), ".dinrc")
+    with open(filename, "r") as stream:
+        source = stream.read()
+
+    context = dict(BUILTINS)
+    context["commands"] = engine.commands
+    co = compile(source, filename, "exec")
+    exec co in context
+
 def main():
     engine = DinEngine()
+    configure(engine)
 
     window = DinWindow(engine)
     window.set_title(TITLE)
