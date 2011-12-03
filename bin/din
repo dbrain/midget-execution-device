@@ -2,18 +2,146 @@
 
 import sys
 import gtk
+import re
 
 APP_NAME = "din"
 APP_VERSION = (0, 1, 0)
 
 TITLE = "%s v%d.%d.%d" % ((APP_NAME,) + APP_VERSION)
 
+class DinEndOfCommandException(Exception):
+    pass
+
+class DinUnexpectedEndOfCommandException(Exception):
+    pass
+
+class DinCommandParser(object):
+    def __init__(self):
+        object.__init__(self)
+
+        self.command = None
+        self.offset = None
+
+    def parse(self, command):
+        self.command = command
+        self.offset = 0
+        return [arg for arg in self]
+
+    def __iter__(self):
+        try:
+            while True:
+                yield self.getnext()
+        except DinEndOfCommandException:
+            pass
+
+    def getnext(self):
+        c = self.c
+        n = self.n
+
+        self.checkeoc()
+
+        while c().isspace():
+            n()
+
+        if c() in ('"', "'"):
+            return self.quoted()
+        else:
+            return self.simple()
+
+    def parsewhile(self, pred, eoc, escape, skiplast):
+        c = self.c
+        n = self.n
+
+        escaped = False
+        temp = ""
+        try:
+            while pred(c(), escaped):
+                if escaped:
+                    if escape: temp += escape(c())
+                    escaped = False
+                else:
+                    if c() == "\\":
+                        escaped = True
+                    else:
+                        temp += c()
+                n()
+            if skiplast and not self.iseoc(): n()
+        except DinEndOfCommandException:
+            if eoc:
+                eoc(temp, escaped)
+            else:
+                raise
+
+        return temp
+
+    def makesimplepred(self):
+        def simple_predicate(c, escaped):
+            return (not c.isspace()) or escaped
+        return simple_predicate
+
+    def simpleeoc(self, temp, escaped):
+        # try to handle a "bad" escape gracefully
+        if escaped: temp += "\\"
+
+    def makesimpleescape(self):
+        def simple_escape(c):
+            if c.isspace() or c == "\\":
+                return c
+            return "\\" + c
+        return simple_escape
+
+    def simple(self):
+        pred = self.makesimplepred()
+        eoc = self.simpleeoc
+        escape = self.makesimpleescape()
+        return self.parsewhile(pred, eoc, escape, False)
+
+    def makequotedpred(self, q):
+        def quoted_predicate(c, escaped):
+            return c != q or escaped
+        return quoted_predicate
+
+    def quotedeoc(self, temp, escaped):
+        raise DinUnexpectedEndOfCommand("unterminated quote")
+
+    def makequotedescape(self, q):
+        def quoted_escape(c):
+            if c == q:
+                return c
+            return "\\" + c
+        return quoted_escape
+
+    def quoted(self):
+        q = self.c()
+        self.n()
+
+        pred = self.makequotedpred(q)
+        eoc = self.quotedeoc
+        escape = self.makequotedescape(q)
+        return self.parsewhile(pred, eoc, escape, True)
+
+    def c(self):
+        return self.command[self.offset]
+
+    def n(self):
+        self.checkeoc()
+        self.offset += 1
+
+    def iseoc(self):
+        return self.offset+1 >= len(self.command)
+
+    def checkeoc(self):
+        if self.iseoc():
+            raise DinEndOfCommandException()
+
 class DinEngine(object):
     def __init__(self):
         object.__init__(self)
 
+        self.commandparser = DinCommandParser()
+
     def execute(self, command):
-        print command
+        print self.commandparser.parse(command)
 
 class DinPopupMenu(gtk.Menu):
     def __init__(self):
