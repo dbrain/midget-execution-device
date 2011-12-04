@@ -1,20 +1,9 @@
 import os
 import re
 
-VAR_REGEX = re.compile(r"\${([^}]+)}")
-
-def var(context, arg):
-    def subn_cb(match):
-        try:
-            return context[match.group(1)]
-        except KeyError:
-            return match.group(0)
-    return VAR_REGEX.subn(subn_cb, arg)[0]
-
-def varsubst(context, args):
-    return tuple([var(context, arg) for arg in args])
-
 class Engine(object):
+    VAR_REGEX = re.compile(r"\${([^}]+)}")
+
     def __init__(self):
         object.__init__(self)
 
@@ -31,7 +20,19 @@ class Engine(object):
         context["*"] = args
         
         command = self.commands[cmdname]
-        command[0](context, varsubst(context, command[1]))
+        command[0](context, self.varsubst(context, command[1]))
+
+    def var(self, context, arg):
+        def subn_cb(match):
+            try:
+                return context[match.group(1)]
+            except KeyError:
+                return match.group(0)
+        return self.VAR_REGEX.subn(subn_cb, arg)[0]
+
+    def varsubst(self, context, args):
+        return tuple([self.var(context, arg) for arg in args])
+
 
 class Commands(object):
     def __init__(self):
