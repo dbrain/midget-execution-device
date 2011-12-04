@@ -25,7 +25,7 @@ class Engine(object):
     def var(self, context, arg):
         def subn_cb(match):
             try:
-                return context[match.group(1)]
+                return str(context[match.group(1)])
             except KeyError:
                 return match.group(0)
         return self.VAR_REGEX.subn(subn_cb, arg)[0]
