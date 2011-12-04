@@ -1,13 +1,21 @@
+import os
+
 class Engine(object):
     def __init__(self):
         object.__init__(self)
 
         self.commandparser = CommandParser()
         self.commands = Commands()
+        self.basecontext = dict(os.environ)
 
     def execute(self, command):
         args = self.commandparser.parse(command)
-        self.commands[args[0]](*args[1:])
+        command, args = args[0], args[1:]
+        context = dict(self.basecontext)
+        for i, arg in zip(range(1, len(args)+1), args):
+            context[str(i)] = arg
+        context["*"] = args
+        self.commands[command](context)
 
 class Commands(object):
     def __init__(self):
