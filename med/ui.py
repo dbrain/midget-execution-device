@@ -32,6 +32,7 @@ class Window(gtk.Window):
     def show(self):
         self.entry.select_region(0, -1)
         gtk.Window.show(self)
+        self.entry.request_focus()
 
     def entry_activate(self, widget):
         self.button.activate()
