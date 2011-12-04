@@ -1,4 +1,18 @@
 import os
+import re
+
+VAR_REGEX = re.compile(r"\${([^}]+)}")
+
+def var(context, arg):
+    def subn_cb(match):
+        try:
+            return context[match.group(1)]
+        except KeyError:
+            return match.group(0)
+    return VAR_REGEX.subn(subn_cb, arg)[0]
+
+def varsubst(context, args):
+    return tuple([var(context, arg) for arg in args])
 
 class Engine(object):
     def __init__(self):
@@ -10,12 +24,14 @@ class Engine(object):
 
     def execute(self, command):
         args = self.commandparser.parse(command)
-        command, args = args[0], args[1:]
+        cmdname, args = args[0], args[1:]
         context = dict(self.basecontext)
         for i, arg in zip(range(1, len(args)+1), args):
             context[str(i)] = arg
         context["*"] = args
-        self.commands[command](context)
+        
+        command = self.commands[cmdname]
+        command[0](context, varsubst(context, command[1]))
 
 class Commands(object):
     def __init__(self):
@@ -23,8 +39,8 @@ class Commands(object):
 
         self.commands = {}
 
-    def add(self, command, handler):
-        self.commands[command] = handler
+    def add(self, command, handler, *params):
+        self.commands[command] = (handler, params)
 
     def __getitem__(self, command):
         return self.commands[command]
