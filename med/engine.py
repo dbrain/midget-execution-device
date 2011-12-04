@@ -1,6 +1,8 @@
 import os
 import re
 
+from urllib import quote_plus as urlquote
+
 class Engine(object):
     VAR_REGEX = re.compile(r"\${([^}]+)}")
 
@@ -9,29 +11,28 @@ class Engine(object):
 
         self.commandparser = CommandParser()
         self.commands = Commands()
-        self.basecontext = dict(os.environ)
 
     def execute(self, command):
         args = self.commandparser.parse(command)
         cmdname, args = args[0], args[1:]
-        context = dict(self.basecontext)
-        for i, arg in zip(range(1, len(args)+1), args):
-            context[str(i)] = arg
-        context["*"] = args
+        context = {}
+        context["env"] = dict(os.environ)
+        context["args"] = args
+        context["u"] = urlquote
         
         command = self.commands[cmdname]
-        command[0](context, self.varsubst(context, command[1]))
+        command[0](context, self.exprsubst(context, command[1]))
 
-    def var(self, context, arg):
+    def expr(self, context, arg):
         def subn_cb(match):
             try:
-                return str(context[match.group(1)])
+                return str(eval(match.group(1), context, context))
             except KeyError:
                 return match.group(0)
         return self.VAR_REGEX.subn(subn_cb, arg)[0]
 
-    def varsubst(self, context, args):
-        return tuple([self.var(context, arg) for arg in args])
+    def exprsubst(self, context, args):
+        return tuple([self.expr(context, arg) for arg in args])
 
 
 class Commands(object):
