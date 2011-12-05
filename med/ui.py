@@ -39,6 +39,7 @@ class Window(gtk.Window):
 
         self.entry = gtk.Entry()
         self.entry.connect("key-release-event", self.entry_keyrelease)
+        self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)
         self.button = gtk.Button("Go")
         self.button.connect("clicked", self.button_clicked)
@@ -49,6 +50,9 @@ class Window(gtk.Window):
 
         self.add(hbox)
 
+        self.seen_esc_press = False
+        self.escape_key = gtk.gdk.keyval_from_name("Escape")
+
     def show_all(self):
         self.entry.select_region(0, -1)
         gtk.Window.show_all(self)
@@ -57,16 +61,23 @@ class Window(gtk.Window):
     def entry_activate(self, widget):
         self.button.activate()
 
+    def entry_keypress(self, widget, event):
+        if event.keyval == self.escape_key:
+            self.seen_esc_press = True
+        else:
+            self.seen_esc_press = False
+
     def entry_keyrelease(self, widget, event):
-        if event.keyval == gtk.gdk.keyval_from_name("Escape"):
+        if event.keyval == self.escape_key and self.seen_esc_press:
             self.hide()
+        self.seen_esc_press = False
 
     def button_clicked(self, widget):
         self.hide()
         try:
             self.engine.execute(self.entry.get_text())
-        except BadCommandException:
-            dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, "invalid command")
+        except BadCommandException as e:
+            dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, e.message)
             dialog.run()
             dialog.destroy()
             self.show_all()
