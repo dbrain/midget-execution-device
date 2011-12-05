@@ -16,10 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from subprocess import check_call, STDOUT
+import os
 
 def cmd_invoke(context, args):
-    check_call(args)
+    pid = os.fork()
+    if pid == 0:
+        os.execvpe(args[0], args, os.environ)
 
 BUILTINS = {
     "invoke":   cmd_invoke
