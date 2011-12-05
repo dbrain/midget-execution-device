@@ -36,7 +36,7 @@ Then create a **.medrc** file in your $HOME directory:
     # /home/tom/.medrc
     
     commands.add("terminal", invoke, "gnome-terminal", "--working-directory=${args[0]}")
-    commands.add("google", invoke, "chromium-browser", "http://www.google.com/?q=${u(" ".join(args))}")
+    commands.add("google", invoke, "chromium-browser", "http://www.google.com/?q=${u(' '.join(args))}")
 
 ## Usage
 
