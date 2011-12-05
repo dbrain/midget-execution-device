@@ -29,10 +29,10 @@ class Window(gtk.Window):
 
         self.add(hbox)
 
-    def show(self):
+    def show_all(self):
         self.entry.select_region(0, -1)
-        gtk.Window.show(self)
-        self.entry.request_focus()
+        gtk.Window.show_all(self)
+        self.entry.grab_focus()
 
     def entry_activate(self, widget):
         self.button.activate()
