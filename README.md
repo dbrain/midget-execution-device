@@ -38,6 +38,9 @@ Then create a **.medrc** file in your $HOME directory:
     commands.add("terminal", invoke, "gnome-terminal", "--working-directory=${args[0]}")
     commands.add("google", invoke, "chromium-browser", "http://www.google.com/?q=${u(' '.join(args))}")
 
+Don't forget to set up a system keyboard shortcut appropriate to your
+Desktop Environment to make it easier to open MED!
+
 ## Usage
 
 Once you've created your .medrc, you can use these commands within MED.
@@ -50,8 +53,16 @@ Once you've created your .medrc, you can use these commands within MED.
 
     google github
 
-Don't forget to set up a system keyboard shortcut appropriate to your
-Desktop Environment to make it easier to open MED!
+.medrc is a fully fledged Python script, so you can write your own actions too:
+
+    def cmd_print(context, args):
+        print args[0]
+
+    commands.add("say", cmd_print, "${' '.join(args)}")
+
+The "say" command will now print its arguments to the command line. Try it out!
+
+    say hello world
 
 ## License
 
