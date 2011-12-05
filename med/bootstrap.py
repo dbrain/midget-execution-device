@@ -17,6 +17,7 @@
 #
 
 import os
+import signal
 
 import gtk
 
@@ -36,6 +37,12 @@ def toggle_visible_handler(widget):
 def window_deleteevent(window):
     return toggle_visible_handler(window)
 
+def window_focusoutevent(window):
+    def focusoutevent(sender, *args):
+        if window.get_visible():
+            window.hide()
+    return focusoutevent
+
 def statusicon_activate(window):
     return toggle_visible_handler(window)
 
@@ -54,6 +61,13 @@ def configure(engine):
     co = compile(source, filename, "exec")
     exec co in context
 
+def makesighandler(window):
+    def sighandler(sig, frame):
+        if sig == signal.SIGUSR1:
+            window.show_all()
+            window.present()
+    return sighandler
+
 def run(engine=None):
     if engine is None:
         engine = Engine()
@@ -62,9 +76,12 @@ def run(engine=None):
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
+    signal.signal(signal.SIGUSR1, makesighandler(window))
+    window.set_keep_above(True)
     window.set_title(title)
     window.set_position(gtk.WIN_POS_CENTER)
     window.connect("delete-event", window_deleteevent(window))
+    window.connect("focus-out-event", window_focusoutevent(window))
 
     popupmenu = PopupMenu()
     popupmenu.onquit(gtk.main_quit)
