@@ -8,7 +8,7 @@ def toggle_visible_handler(widget):
         if widget.get_visible():
             widget.hide()
         else:
-            widget.show()
+            widget.show_all()
     return impl
 
 def window_deleteevent(window):
