@@ -27,22 +27,6 @@ except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     import med
 
-def configure(engine):
-    filename = os.path.join(os.getenv("HOME"), ".medrc")
-    with open(filename, "r") as stream:
-        source = stream.read()
-
-    context = dict(med.BUILTINS)
-    context["commands"] = engine.commands
-    co = compile(source, filename, "exec")
-    exec co in context
-
-def main():
-    engine = med.Engine()
-    configure(engine)
-
-    med.run(engine)
-
 if __name__ == "__main__":
-    main()
+    med.run()
 

@@ -16,10 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
+
 import gtk
 
 from . import NAME, VERSION
 from .ui import Window, PopupMenu
+from .engine import Engine
+from .builtins import BUILTINS
 
 def toggle_visible_handler(widget):
     def impl(sender, *args):
@@ -40,7 +44,21 @@ def statusicon_popupmenu(menu):
         menu.popup(None, None, None, button, timestamp)
     return impl
 
-def run(engine):
+def configure(engine):
+    filename = os.path.join(os.getenv("HOME"), ".medrc")
+    with open(filename, "r") as stream:
+        source = stream.read()
+
+    context = dict(BUILTINS)
+    context["commands"] = engine.commands
+    co = compile(source, filename, "exec")
+    exec co in context
+
+def run(engine=None):
+    if engine is None:
+        engine = Engine()
+        configure(engine)
+
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
