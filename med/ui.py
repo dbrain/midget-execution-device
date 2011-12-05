@@ -18,6 +18,8 @@
 
 import gtk
 
+from .engine import BadCommandException
+
 class PopupMenu(gtk.Menu):
     def __init__(self):
         gtk.Menu.__init__(self)
@@ -60,5 +62,12 @@ class Window(gtk.Window):
             self.hide()
 
     def button_clicked(self, widget):
-        self.engine.execute(self.entry.get_text())
         self.hide()
+        try:
+            self.engine.execute(self.entry.get_text())
+        except BadCommandException:
+            dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, "invalid command")
+            dialog.run()
+            dialog.destroy()
+            self.show_all()
+

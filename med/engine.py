@@ -38,7 +38,10 @@ class Engine(object):
         context["args"] = args
         context["u"] = urlquote
         
-        command = self.commands[cmdname]
+        try:
+            command = self.commands[cmdname]
+        except KeyError:
+            raise BadCommandException("unknown command: %s" % cmdname)
         command[0](context, self.exprsubst(context, command[1]))
 
     def expr(self, context, arg):
@@ -64,6 +67,9 @@ class Commands(object):
 
     def __getitem__(self, command):
         return self.commands[command]
+
+class BadCommandException(Exception):
+    pass
 
 class EndOfCommandException(Exception):
     pass
