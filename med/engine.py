@@ -21,13 +21,21 @@ import re
 
 from urllib import quote_plus as urlquote
 
+class Settings(object):
+    def __init__(self):
+        object.__init__(self)
+
+        self.fifo = "/var/tmp/med-fifo"
+        self.run_at_login = False
+        self.show_at_startup = True
+
 class Engine(object):
     VAR_REGEX = re.compile(r"\${([^}]+)}")
 
     def __init__(self):
         object.__init__(self)
 
-        self.fifo = "/var/tmp/med-fifo"
+        self.settings = Settings()
         self.commandparser = CommandParser()
         self.commands = Commands()
 

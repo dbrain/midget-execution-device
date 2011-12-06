@@ -53,6 +53,8 @@ class Window(gtk.Window):
         vbox = gtk.VBox(False, 0)
         vbox.pack_start(hbox, True, True, 5)
 
+        vbox.show_all()
+
         self.add(vbox)
 
         self.seen_esc_press = False

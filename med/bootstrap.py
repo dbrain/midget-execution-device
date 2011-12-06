@@ -19,6 +19,7 @@
 import sys
 import os
 import signal
+import atexit
 
 import gtk
 import gobject
@@ -62,7 +63,7 @@ def configure(engine):
         source = stream.read()
 
     context = dict(BUILTINS)
-    context["engine"] = engine
+    context["settings"] = engine.settings
     context["commands"] = engine.commands
     co = compile(source, filename, "exec")
     exec co in context
@@ -70,9 +71,10 @@ def configure(engine):
 def makesighandler(path, fd):
     def sighandler(*args):
         try:
-            os.close(fd)
+            if fd: os.close(fd)
         finally:
-            os.unlink(path)
+            if os.path.exists(path): os.unlink(path)
+        sys.exit(0)
     return sighandler
 
 def makefifo(path, window):
@@ -106,8 +108,8 @@ def run(engine=None):
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
-    fd = single_instance(engine.fifo, window)
-    sighandler = makesighandler(engine.fifo, fd)
+    fd = single_instance(engine.settings.fifo, window)
+    sighandler = makesighandler(engine.settings.fifo, fd)
     signal.signal(signal.SIGQUIT, sighandler)
     signal.signal(signal.SIGTERM, sighandler)
     signal.signal(signal.SIGINT, sighandler)
@@ -130,9 +132,12 @@ def run(engine=None):
     statusicon.connect("activate", statusicon_activate(window))
     statusicon.connect("popup-menu", statusicon_popupmenu(popupmenu))
 
-    window.show_all()
-    window.present()
+    if engine.settings.show_at_startup:
+        window.show_all()
+        window.present()
     statusicon.set_visible(True)
+
+    atexit.register(sighandler)
 
     try:
         gtk.main()
