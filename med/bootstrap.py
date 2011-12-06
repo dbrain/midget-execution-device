@@ -16,22 +16,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import sys
 import os
 import signal
 
 import gtk
+import gobject
 
 from . import NAME, VERSION
 from .ui import Window, PopupMenu
 from .engine import Engine
 from .builtins import BUILTINS
 
+def toggle_visible(widget):
+    if widget.get_visible():
+        widget.hide()
+    else:
+        widget.present()
+
 def toggle_visible_handler(widget):
     def impl(sender, *args):
-        if widget.get_visible():
-            widget.hide()
-        else:
-            widget.show_all()
+        toggle_visible(widget)
     return impl
 
 def window_deleteevent(window):
@@ -57,31 +62,68 @@ def configure(engine):
         source = stream.read()
 
     context = dict(BUILTINS)
+    context["engine"] = engine
     context["commands"] = engine.commands
     co = compile(source, filename, "exec")
     exec co in context
 
-def makesighandler(window):
-    def sighandler(sig, frame):
-        if sig == signal.SIGUSR1:
-            window.show_all()
-            window.present()
-    return sighandler
+usr1 = 0
+quit = 0
+
+def makequithandler():
+    def sigquit(sig, frame):
+        gtk.main_quit()
+    return sigquit
+
+def makeusr1handler(window):
+    def sigusr1(sig, frame):
+        toggle_visible(window)
+    return sigusr1
+
+def makepidfile(path):
+    with open(path, "w+") as stream:
+        stream.write(str(os.getpid()))
+
+def ensure_single_instance(pidfile):
+    if os.path.exists(pidfile):
+        try:
+            with open(pidfile, "r") as stream:
+                pid = int(stream.read())
+                try:
+                    os.kill(pid, signal.SIGUSR1)
+                    sys.exit(0)
+                except OSError:
+                    print >>sys.stderr, "WARNING: overwriting stale pid file"
+                    os.unlink(pidfile)
+                    raise
+        except OSError as err:
+            makepidfile(pidfile)
+    else:
+        makepidfile(pidfile)
 
 def run(engine=None):
     if engine is None:
         engine = Engine()
         configure(engine)
+    
+    ensure_single_instance(engine.pidfile)
 
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
-    signal.signal(signal.SIGUSR1, makesighandler(window))
-    window.set_keep_above(True)
+    signal.signal(signal.SIGUSR1, makeusr1handler(window))
+    signal.signal(signal.SIGQUIT, makequithandler())
+    signal.signal(signal.SIGTERM, makequithandler())
     window.set_title(title)
     window.set_position(gtk.WIN_POS_CENTER)
+    window.set_decorated(False)
+    window.set_has_frame(False)
+    window.set_keep_above(True)
+    window.set_skip_taskbar_hint(True)
+    window.set_skip_pager_hint(False)
+    window.set_urgency_hint(True)
+    window.set_focus_on_map(True)
     window.connect("delete-event", window_deleteevent(window))
-    window.connect("focus-out-event", window_focusoutevent(window))
 
     popupmenu = PopupMenu()
     popupmenu.onquit(gtk.main_quit)

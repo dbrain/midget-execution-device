@@ -44,18 +44,22 @@ class Window(gtk.Window):
         self.button = gtk.Button("Go")
         self.button.connect("clicked", self.button_clicked)
 
-        hbox = gtk.HBox(False, 0)
-        hbox.pack_start(self.entry, True, True, 0)
-        hbox.pack_start(self.button, False, False, 0)
+        self.connect("show", self.self_show)
 
-        self.add(hbox)
+        hbox = gtk.HBox(False, 0)
+        hbox.pack_start(self.entry, True, True, 5)
+        hbox.pack_start(self.button, False, False, 5)
+
+        vbox = gtk.VBox(False, 0)
+        vbox.pack_start(hbox, True, True, 5)
+
+        self.add(vbox)
 
         self.seen_esc_press = False
         self.escape_key = gtk.gdk.keyval_from_name("Escape")
 
-    def show_all(self):
+    def self_show(self, widget):
         self.entry.select_region(0, -1)
-        gtk.Window.show_all(self)
         self.entry.grab_focus()
 
     def entry_activate(self, widget):
