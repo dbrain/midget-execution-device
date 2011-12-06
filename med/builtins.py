@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import gtk
 import os
 
 def cmd_invoke(context, args):
@@ -23,7 +24,11 @@ def cmd_invoke(context, args):
     if pid == 0:
         os.execvpe(args[0], args, os.environ)
 
+def cmd_quit(context, args):
+    gtk.main_quit()
+
 BUILTINS = {
-    "invoke":   cmd_invoke
+    "invoke":   cmd_invoke,
+    "quit":     cmd_quit
 }
 
