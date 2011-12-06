@@ -17,7 +17,7 @@
 #
 
 NAME = "Midget Execution Device"
-VERSION = (0, 1, 0)
+VERSION = (0, 2, 0)
 
 from .bootstrap import run
 from .engine import Engine
