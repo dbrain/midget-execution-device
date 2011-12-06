@@ -41,14 +41,11 @@ class Window(gtk.Window):
         self.entry.connect("key-release-event", self.entry_keyrelease)
         self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)
-        self.button = gtk.Button("Go")
-        self.button.connect("clicked", self.button_clicked)
 
         self.connect("show", self.self_show)
 
         hbox = gtk.HBox(False, 0)
         hbox.pack_start(self.entry, True, True, 5)
-        hbox.pack_start(self.button, False, False, 5)
 
         vbox = gtk.VBox(False, 0)
         vbox.pack_start(hbox, True, True, 5)
@@ -66,7 +63,14 @@ class Window(gtk.Window):
         self.entry.grab_focus()
 
     def entry_activate(self, widget):
-        self.button.activate()
+        self.hide()
+        try:
+            self.engine.execute(self.entry.get_text())
+        except BadCommandException as e:
+            dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, e.message)
+            dialog.run()
+            dialog.destroy()
+            self.show_all()
 
     def entry_keypress(self, widget, event):
         if event.keyval == self.escape_key:
@@ -78,14 +82,4 @@ class Window(gtk.Window):
         if event.keyval == self.escape_key and self.seen_esc_press:
             self.hide()
         self.seen_esc_press = False
-
-    def button_clicked(self, widget):
-        self.hide()
-        try:
-            self.engine.execute(self.entry.get_text())
-        except BadCommandException as e:
-            dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, e.message)
-            dialog.run()
-            dialog.destroy()
-            self.show_all()
 
