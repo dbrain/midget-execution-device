@@ -39,7 +39,7 @@ Another idea here might be wildcards e.g.
 "treat all commands starting with 'http://*' as a URL"
 "treat all commands starting with '/*' as a file system path"
 
-# More intuitive custom commands
+## More intuitive custom commands
 
 ${...} substitution can get a bit unwieldy for all but the simplest inputs
 (maybe a good thing?).
