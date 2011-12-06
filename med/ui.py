@@ -38,6 +38,7 @@ class Window(gtk.Window):
         self.engine = engine
 
         self.entry = gtk.Entry()
+        self.entry.set_width_chars(40)
         self.entry.connect("key-release-event", self.entry_keyrelease)
         self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)
@@ -60,6 +61,7 @@ class Window(gtk.Window):
     def self_show(self, widget):
         self.get_window().focus()
         self.entry.select_region(0, -1)
+        # XXX this hack forces the window to grab keyboard focus...
         self.entry.grab_focus()
 
     def entry_activate(self, widget):
