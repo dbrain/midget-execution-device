@@ -21,9 +21,11 @@ import os
 
 settings.fifo = os.path.join(os.getenv("HOME"), ".medfifo")
 settings.show_at_startup = False
+settings.browser = "gnome-www-browser"
 
-commands.add("chrome", invoke, "chromium-browser", "${' '.join(args)}")
-commands.add("google", invoke, "chromium-browser", "http://google.com/#q=${u(' '.join(args))}")
+commands.add("goto", url, "${' '.join(args)}")
+commands.add("google", url, "http://google.com/#q=${u(' '.join(args))}")
+commands.add("github", url, "http://github.com/${u(' '.join(args))}")
 commands.add("terminal", invoke, "gnome-terminal", "--working-directory=${args[0]}")
 commands.add("exit", quit)
 
