@@ -59,6 +59,7 @@ class Window(gtk.Window):
         self.escape_key = gtk.gdk.keyval_from_name("Escape")
 
     def self_show(self, widget):
+        self.get_window().focus()
         self.entry.select_region(0, -1)
         self.entry.grab_focus()
 
