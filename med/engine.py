@@ -28,6 +28,7 @@ class Settings(object):
         self.fifo = "/var/tmp/med-fifo"
         self.run_at_login = False
         self.show_at_startup = True
+        self.browser = "gnome-www-browser"
 
 class Engine(object):
     VAR_REGEX = re.compile(r"\${([^}]+)}")
@@ -46,6 +47,7 @@ class Engine(object):
         context["env"] = dict(os.environ)
         context["args"] = args
         context["u"] = urlquote
+        context["engine"] = self
         
         try:
             command = self.commands[cmdname]
