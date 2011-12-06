@@ -1,0 +1,39 @@
+# TODO
+
+## Autocomplete
+
+Use gtk.EntryCompletion to provide automatic completion of known commands.
+
+## History
+
+Record commands entered by the user. Offer them as suggestions in autocomplete.
+
+## "Smart Tab"
+
+Hit <Tab> to skip over arguments in the history.
+
+More details to come.
+
+## UI for managing configuration
+
+This should largely deprecate .medrc.
+
+## "Default handler"
+
+Attempts to make a smart guess at what the user meant for an unknown input.
+
+e.g. entering a URL should open the browser.
+
+Another idea here might be wildcards e.g.
+
+"treat all commands starting with 'http://*' as a URL"
+"treat all commands starting with '/*' as a file system path"
+
+## PyPI package.
+
+Publish this app to PyPI.
+
+## Packages for Debian/Ubuntu/Mint and RedHat/Fedora.
+
+Packages & distribution for .deb and .rpm.
+
