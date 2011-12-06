@@ -27,7 +27,7 @@ class Engine(object):
     def __init__(self):
         object.__init__(self)
 
-        self.pidfile = "/var/tmp/med.pid"
+        self.fifo = "/var/tmp/med-fifo"
         self.commandparser = CommandParser()
         self.commands = Commands()
 

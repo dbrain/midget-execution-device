@@ -67,59 +67,56 @@ def configure(engine):
     co = compile(source, filename, "exec")
     exec co in context
 
-usr1 = 0
-quit = 0
-
-def makequithandler():
-    def sigquit(sig, frame):
-        gtk.main_quit()
-    return sigquit
-
-def makeusr1handler(window):
-    def sigusr1(sig, frame):
-        toggle_visible(window)
-    return sigusr1
-
-def makepidfile(path):
-    with open(path, "w+") as stream:
-        stream.write(str(os.getpid()))
-
-def ensure_single_instance(pidfile):
-    if os.path.exists(pidfile):
+def makesighandler(path, fd):
+    def sighandler(*args):
         try:
-            with open(pidfile, "r") as stream:
-                pid = int(stream.read())
-                try:
-                    os.kill(pid, signal.SIGUSR1)
-                    sys.exit(0)
-                except OSError:
-                    print >>sys.stderr, "WARNING: overwriting stale pid file"
-                    os.unlink(pidfile)
-                    raise
+            os.close(fd)
+        finally:
+            os.unlink(path)
+    return sighandler
+
+def makefifo(path, window):
+    def on_fifo_data(fd, *args):
+        data = os.read(fd, 8)
+        toggle_visible(window)
+        return True
+    os.mkfifo(path, 0640)
+    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    gobject.io_add_watch(fd, gobject.IO_IN, on_fifo_data)
+
+def single_instance(path, window):
+    if os.path.exists(path):
+        try:
+            fd = os.open(path, os.O_WRONLY)
+            try:
+                os.write(fd, "a")
+            finally:
+                os.close(fd)
+            sys.exit(0)
         except OSError as err:
-            makepidfile(pidfile)
+            return makefifo(path, window)
     else:
-        makepidfile(pidfile)
+        return makefifo(path, window)
 
 def run(engine=None):
     if engine is None:
         engine = Engine()
         configure(engine)
     
-    ensure_single_instance(engine.pidfile)
-
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
-    signal.signal(signal.SIGUSR1, makeusr1handler(window))
-    signal.signal(signal.SIGQUIT, makequithandler())
-    signal.signal(signal.SIGTERM, makequithandler())
+    fd = single_instance(engine.fifo, window)
+    sighandler = makesighandler(engine.fifo, fd)
+    signal.signal(signal.SIGQUIT, sighandler)
+    signal.signal(signal.SIGTERM, sighandler)
+    signal.signal(signal.SIGINT, sighandler)
     window.set_title(title)
     window.set_position(gtk.WIN_POS_CENTER)
     window.set_decorated(False)
     window.set_has_frame(False)
     window.set_keep_above(True)
-    window.set_skip_taskbar_hint(True)
+    window.set_skip_taskbar_hint(False)
     window.set_skip_pager_hint(False)
     window.set_urgency_hint(True)
     window.set_focus_on_map(True)
@@ -134,7 +131,11 @@ def run(engine=None):
     statusicon.connect("popup-menu", statusicon_popupmenu(popupmenu))
 
     window.show_all()
+    window.present()
     statusicon.set_visible(True)
 
-    gtk.main()
+    try:
+        gtk.main()
+    except KeyboardInterrupt:
+        pass
 
