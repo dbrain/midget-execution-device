@@ -39,6 +39,12 @@ class Window(gtk.Window):
 
         self.entry = gtk.Entry()
         self.entry.set_width_chars(40)
+        self.entry.set_has_frame(False)
+        border = gtk.Border()
+        border.top = border.left = border.right = border.bottom = 20
+        self.entry.set_inner_border(border)
+        self.entry.set_alignment(0.5)
+        self.entry.set_icon_from_stock(gtk.ENTRY_ICON_PRIMARY, gtk.STOCK_OPEN)
         self.entry.connect("key-release-event", self.entry_keyrelease)
         self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)
