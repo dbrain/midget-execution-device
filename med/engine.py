@@ -21,6 +21,8 @@ import re
 
 from urllib import quote_plus as urlquote
 
+from .builtins import BUILTINS
+
 class Settings(object):
     def __init__(self):
         object.__init__(self)
@@ -39,6 +41,18 @@ class Engine(object):
         self.settings = Settings()
         self.commandparser = CommandParser()
         self.commands = Commands()
+
+    def configure(self):
+        filename = os.path.join(os.getenv("HOME"), ".medrc")
+        with open(filename, "r") as stream:
+            source = stream.read()
+
+        self.commands.reset()
+        context = dict(BUILTINS)
+        context["settings"] = self.settings
+        context["commands"] = self.commands
+        co = compile(source, filename, "exec")
+        exec co in context
 
     def execute(self, command):
         args = self.commandparser.parse(command)
@@ -71,6 +85,9 @@ class Commands(object):
     def __init__(self):
         object.__init__(self)
 
+        self.reset()
+
+    def reset(self):
         self.commands = {}
 
     def add(self, command, handler, *params):

@@ -30,9 +30,13 @@ def cmd_quit(context, args):
 def cmd_url(context, args):
     cmd_invoke(context, (context["engine"].settings.browser,) + args)
 
+def cmd_reconfigure(context, args):
+    context["engine"].configure()
+
 BUILTINS = {
     "invoke":   cmd_invoke,
     "quit":     cmd_quit,
-    "url":      cmd_url
+    "url":      cmd_url,
+    "reconfigure": cmd_reconfigure
 }
 

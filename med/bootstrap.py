@@ -27,7 +27,6 @@ import gobject
 from . import NAME, VERSION
 from .ui import Window, PopupMenu
 from .engine import Engine
-from .builtins import BUILTINS
 
 def toggle_visible(widget):
     if widget.get_visible():
@@ -56,17 +55,6 @@ def statusicon_popupmenu(menu):
     def impl(sender, button, timestamp):
         menu.popup(None, None, None, button, timestamp)
     return impl
-
-def configure(engine):
-    filename = os.path.join(os.getenv("HOME"), ".medrc")
-    with open(filename, "r") as stream:
-        source = stream.read()
-
-    context = dict(BUILTINS)
-    context["settings"] = engine.settings
-    context["commands"] = engine.commands
-    co = compile(source, filename, "exec")
-    exec co in context
 
 def makesighandler(path, fd):
     def sighandler(*args):
@@ -110,7 +98,7 @@ def single_instance(path, window):
 def run(engine=None):
     if engine is None:
         engine = Engine()
-        configure(engine)
+        engine.configure()
     
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
