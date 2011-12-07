@@ -41,10 +41,8 @@ class Window(gtk.Window):
         self.set_decorated(False)
         self.set_has_frame(False)
         self.set_keep_above(True)
-        self.set_skip_taskbar_hint(True)
+        self.set_skip_taskbar_hint(False)
         self.set_focus_on_map(True)
-
-        self.connect("focus-out-event", self.self_focusoutevent)
 
         self.entry = gtk.Entry()
         self.entry.set_width_chars(40)
@@ -78,9 +76,6 @@ class Window(gtk.Window):
         self.entry.select_region(0, -1)
         # XXX this hack forces the window to grab keyboard focus...
         self.entry.grab_focus()
-
-    def self_focusoutevent(self, widget, *args):
-        self.hide()
 
     def entry_activate(self, widget):
         self.hide()
