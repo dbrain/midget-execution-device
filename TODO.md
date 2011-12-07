@@ -4,14 +4,6 @@
 
 Everything's a little bit of a mess right now. Clean up.
 
-## Hot reload
-
-I want to be able to reload my .medrc on the fly.
-
-## Autocomplete
-
-Use gtk.EntryCompletion to provide automatic completion of known commands.
-
 ## History
 
 Record commands entered by the user. Offer them as suggestions in autocomplete.
@@ -38,6 +30,10 @@ Another idea here might be wildcards e.g.
 
 "treat all commands starting with 'http://*' as a URL"
 "treat all commands starting with '/*' as a file system path"
+
+**XXX** As of 2011-12-07 this functionality is present, but hard-coded.
+
+Advanced users should be able to define their own custom commands.
 
 ## More intuitive custom commands
 
