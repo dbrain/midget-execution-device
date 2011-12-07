@@ -27,5 +27,7 @@ commands.add("goto", url, "${' '.join(args)}")
 commands.add("google", url, "http://google.com/#q=${u(' '.join(args))}")
 commands.add("github", url, "http://github.com/${u(' '.join(args))}")
 commands.add("terminal", invoke, "gnome-terminal", "--working-directory=${args[0]}")
+commands.add("editconfig", invoke, "gvim", os.path.join(os.getenv("HOME"), ".medrc"))
+commands.add("reconfigure", reconfigure)
 commands.add("exit", quit)
 
