@@ -23,6 +23,8 @@ import pango
 
 from .engine import BadCommandException
 
+TYPE_COMMAND = 1
+
 ICONDIR = os.path.join(os.path.dirname(__file__), "..", "icon")
 
 def get_icon_pixbuf():
@@ -46,6 +48,41 @@ class PopupMenu(gtk.Menu):
     def onquit(self, handler):
         self.quit_menuitem.connect("activate", handler)
 
+class Entry(gtk.Entry):
+    def __init__(self, engine):
+        gtk.Entry.__init__(self)
+
+        engine.commands.connect('reset', self.commands_reset)
+        engine.commands.connect('add', self.commands_add)
+
+        self.completion = gtk.EntryCompletion()
+        self.model = gtk.ListStore(str, int)
+        for command in engine.commands:
+            self.model.append((command, TYPE_COMMAND))
+        self.completion.set_model(self.model)
+        self.completion.set_text_column(0)
+        self.completion.set_inline_completion(True)
+        self.completion.set_inline_selection(True)
+        self.completion.set_popup_completion(False)
+        # self.completion.connect("action-activated", self.completion_actionactivated)
+
+        self.set_width_chars(30)
+        self.set_has_frame(False)
+        border = gtk.Border()
+        border.top = border.left = border.right = border.bottom = 20
+        self.set_inner_border(border)
+        self.set_alignment(0.5)
+        self.set_icon_from_pixbuf(gtk.ENTRY_ICON_PRIMARY, get_icon_pixbuf())
+        self.modify_font(pango.FontDescription("sans bold 16"))
+        self.set_completion(self.completion)
+
+    def commands_reset(self, commands):
+        # TODO only remove TYPE_COMMAND items
+        self.model.clear()
+
+    def commands_add(self, commands, command):
+        self.model.append((command, TYPE_COMMAND))
+
 class Window(gtk.Window):
     def __init__(self, engine):
         gtk.Window.__init__(self)
@@ -59,15 +96,7 @@ class Window(gtk.Window):
         self.set_skip_taskbar_hint(False)
         self.set_focus_on_map(True)
 
-        self.entry = gtk.Entry()
-        self.entry.set_width_chars(30)
-        self.entry.set_has_frame(False)
-        border = gtk.Border()
-        border.top = border.left = border.right = border.bottom = 20
-        self.entry.set_inner_border(border)
-        self.entry.set_alignment(0.5)
-        self.entry.set_icon_from_pixbuf(gtk.ENTRY_ICON_PRIMARY, get_icon_pixbuf())
-        self.entry.modify_font(pango.FontDescription("sans bold 16"))
+        self.entry = Entry(engine)
         self.entry.connect("key-release-event", self.entry_keyrelease)
         self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)

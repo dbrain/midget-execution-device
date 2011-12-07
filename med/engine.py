@@ -19,6 +19,8 @@
 import os
 import re
 
+import gobject
+
 from urllib import quote_plus as urlquote
 
 from .builtins import BUILTINS
@@ -32,11 +34,11 @@ class Settings(object):
         self.show_at_startup = True
         self.browser = "gnome-www-browser"
 
-class Engine(object):
+class Engine(gobject.GObject):
     VAR_REGEX = re.compile(r"\${([^}]+)}")
 
     def __init__(self):
-        object.__init__(self)
+        gobject.GObject.__init__(self)
 
         self.settings = Settings()
         self.commandparser = CommandParser()
@@ -80,21 +82,30 @@ class Engine(object):
     def exprsubst(self, context, args):
         return tuple([self.expr(context, arg) for arg in args])
 
-
-class Commands(object):
+class Commands(gobject.GObject):
     def __init__(self):
-        object.__init__(self)
+        gobject.GObject.__init__(self)
 
         self.reset()
 
     def reset(self):
         self.commands = {}
+        self.emit("reset")
 
     def add(self, command, handler, *params):
         self.commands[command] = (handler, params)
+        self.emit("add", command)
 
     def __getitem__(self, command):
         return self.commands[command]
+
+    def __iter__(self):
+        keys = self.commands.keys()
+        keys.sort()
+        return iter(keys)
+
+gobject.signal_new("add", Commands, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, [str])
+gobject.signal_new("reset", Commands, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, [])
 
 class BadCommandException(Exception):
     pass
