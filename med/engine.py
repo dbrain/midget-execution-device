@@ -68,7 +68,17 @@ class Engine(gobject.GObject):
         try:
             command = self.commands[cmdname]
         except KeyError:
-            raise BadCommandException("unknown command: %s" % cmdname)
+            if cmdname.startswith("http://") or cmdname.startswith("https://"):
+                BUILTINS["url"](context, (cmdname,))
+                return
+            elif re.match(r'^.*\.(com|org|net|us|ws|co|com\.au|org\.au|net\.au)$', cmdname.strip()):
+                BUILTINS["url"](context, ("http://%s" % cmdname,))
+                return
+            elif cmdname.startswith("/"):
+                BUILTINS["invoke"](context, ("gnome-terminal", "--working-directory=%s" % cmdname,))
+                return
+            else:
+                raise BadCommandException("unknown command: %s" % cmdname)
         command[0](context, self.exprsubst(context, command[1]))
 
     def expr(self, context, arg):
