@@ -25,9 +25,11 @@ settings.browser = "gnome-www-browser"
 
 commands.add("goto", url, "${' '.join(args)}")
 commands.add("google", url, "http://google.com/#q=${u(' '.join(args))}")
+commands.add("gmail", url, "http://gmail.com")
 commands.add("github", url, "http://github.com/${u(' '.join(args))}")
 commands.add("terminal", invoke, "gnome-terminal", "--working-directory=${args[0]}")
 commands.add("editconfig", invoke, "gvim", os.path.join(os.getenv("HOME"), ".medrc"))
+commands.add("shutdown", invoke, "gnome-session-quit", "--power-off", "--no-prompt")
 commands.add("reconfigure", reconfigure)
 commands.add("exit", quit)
 
