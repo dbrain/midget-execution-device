@@ -16,9 +16,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
+
 import gtk
+import pango
 
 from .engine import BadCommandException
+
+ICONDIR = os.path.join(os.path.dirname(__file__), "..", "icon")
+
+def get_icon_pixbuf():
+    image = gtk.Image()
+    image.set_from_file(os.path.join(ICONDIR, "icon.png"))
+    return image.get_pixbuf()
+
+def StatusIcon(title):
+    statusicon = gtk.status_icon_new_from_pixbuf(get_icon_pixbuf())
+    statusicon.set_tooltip(title)
+    return statusicon
 
 class PopupMenu(gtk.Menu):
     def __init__(self):
@@ -45,13 +60,14 @@ class Window(gtk.Window):
         self.set_focus_on_map(True)
 
         self.entry = gtk.Entry()
-        self.entry.set_width_chars(40)
+        self.entry.set_width_chars(30)
         self.entry.set_has_frame(False)
         border = gtk.Border()
         border.top = border.left = border.right = border.bottom = 20
         self.entry.set_inner_border(border)
         self.entry.set_alignment(0.5)
-        self.entry.set_icon_from_stock(gtk.ENTRY_ICON_PRIMARY, gtk.STOCK_OPEN)
+        self.entry.set_icon_from_pixbuf(gtk.ENTRY_ICON_PRIMARY, get_icon_pixbuf())
+        self.entry.modify_font(pango.FontDescription("sans bold 16"))
         self.entry.connect("key-release-event", self.entry_keyrelease)
         self.entry.connect("key-press-event", self.entry_keypress)
         self.entry.connect("activate", self.entry_activate)

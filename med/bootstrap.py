@@ -25,7 +25,7 @@ import gtk
 import gobject
 
 from . import NAME, VERSION
-from .ui import Window, PopupMenu
+from .ui import Window, PopupMenu, StatusIcon
 from .engine import Engine
 
 def toggle_visible(widget):
@@ -110,8 +110,7 @@ def run(engine=None):
     popupmenu = PopupMenu()
     popupmenu.onquit(gtk.main_quit)
 
-    statusicon = gtk.status_icon_new_from_stock(gtk.STOCK_OPEN)
-    statusicon.set_tooltip(title)
+    statusicon = StatusIcon(title)
     statusicon.connect("activate", statusicon_activate(window))
     statusicon.connect("popup-menu", statusicon_popupmenu(popupmenu))
 
