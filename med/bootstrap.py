@@ -86,6 +86,13 @@ def makefifo(path, window):
     fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
     gobject.io_add_watch(fd, gobject.IO_IN, on_fifo_data)
 
+    sighandler = makesighandler(path, fd)
+    signal.signal(signal.SIGQUIT, sighandler)
+    signal.signal(signal.SIGTERM, sighandler)
+    signal.signal(signal.SIGINT, sighandler)
+    atexit.register(sighandler)
+
+
 def single_instance(path, window):
     if os.path.exists(path):
         try:
@@ -108,20 +115,8 @@ def run(engine=None):
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
     window = Window(engine)
-    fd = single_instance(engine.settings.fifo, window)
-    sighandler = makesighandler(engine.settings.fifo, fd)
-    signal.signal(signal.SIGQUIT, sighandler)
-    signal.signal(signal.SIGTERM, sighandler)
-    signal.signal(signal.SIGINT, sighandler)
+    single_instance(engine.settings.fifo, window)
     window.set_title(title)
-    window.set_position(gtk.WIN_POS_CENTER)
-    window.set_decorated(False)
-    window.set_has_frame(False)
-    window.set_keep_above(True)
-    window.set_skip_taskbar_hint(False)
-    window.set_skip_pager_hint(False)
-    window.set_urgency_hint(True)
-    window.set_focus_on_map(True)
     window.connect("delete-event", window_deleteevent(window))
 
     popupmenu = PopupMenu()
@@ -136,8 +131,6 @@ def run(engine=None):
         window.show_all()
         window.present()
     statusicon.set_visible(True)
-
-    atexit.register(sighandler)
 
     try:
         gtk.main()

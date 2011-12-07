@@ -37,6 +37,13 @@ class Window(gtk.Window):
         
         self.engine = engine
 
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_decorated(False)
+        self.set_has_frame(False)
+        self.set_keep_above(True)
+        self.set_skip_taskbar_hint(True)
+        self.set_focus_on_map(True)
+
         self.connect("focus-out-event", self.self_focusoutevent)
 
         self.entry = gtk.Entry()
