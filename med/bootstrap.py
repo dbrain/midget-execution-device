@@ -81,7 +81,7 @@ def makefifo(path, window):
     atexit.register(sighandler)
 
 
-def single_instance(path, window):
+def single_instance(path):
     if os.path.exists(path):
         try:
             fd = os.open(path, os.O_WRONLY)
@@ -89,11 +89,10 @@ def single_instance(path, window):
                 os.write(fd, "a")
             finally:
                 os.close(fd)
-            sys.exit(0)
+            return False
         except OSError as err:
-            return makefifo(path, window)
-    else:
-        return makefifo(path, window)
+            pass
+    return True
 
 def run(engine=None):
     if engine is None:
@@ -102,8 +101,9 @@ def run(engine=None):
     
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
+    if not single_instance(engine.settings.fifo): sys.exit(0)
     window = Window(engine)
-    single_instance(engine.settings.fifo, window)
+    makefifo(engine.settings.fifo, window)
     window.set_title(title)
     window.connect("delete-event", window_deleteevent(window))
 
