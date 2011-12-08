@@ -64,6 +64,10 @@ The "say" command will now print its arguments to the command line. Try it out!
 
     say hello world
 
+Some creep added magic to support:
+**MATHEMAGIC** You can calculate basic maths using =MATHS, e.g. =123+456 (this is just evalled using python)
+**Command execution** You can launch an application that is executable on your path by just typing it in, anything after it will be arguments
+
 ## License
 
 This software is licensed under the terms of the [GPL v3 License](http://www.gnu.org/licenses/gpl-3.0.txt).
