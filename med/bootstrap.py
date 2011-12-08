@@ -20,6 +20,8 @@ import sys
 import os
 import signal
 import atexit
+import socket
+import struct
 
 import gtk
 import gobject
@@ -56,43 +58,53 @@ def statusicon_popupmenu(menu):
         menu.popup(None, None, None, button, timestamp)
     return impl
 
-def makesighandler(path, fd):
+def makesighandler(sck):
     def sighandler(*args):
         try:
-            if fd: os.close(fd)
-        finally:
-            if os.path.exists(path): os.unlink(path)
+            sck.close()
+        except OSError:
+            pass
         sys.exit(0)
     return sighandler
 
-def makefifo(path, window):
+def startserver(host, port, window):
     def on_fifo_data(fd, *args):
-        data = os.read(fd, 8)
+        sck = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            client, addr = sck.accept()
+            client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
+            try:
+                client.shutdown(socket.SHUT_RDWR)
+            finally:
+                client.close()
+        except socket.error as err:
+            pass
         toggle_visible(window)
         return True
-    os.mkfifo(path, 0640)
-    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
-    gobject.io_add_watch(fd, gobject.IO_IN, on_fifo_data)
+    sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    sck.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sck.bind((host, port))
+    sck.listen(socket.SOMAXCONN)
+    gobject.io_add_watch(sck.fileno(), gobject.IO_IN, on_fifo_data)
 
-    sighandler = makesighandler(path, fd)
+    sighandler = makesighandler(sck)
     signal.signal(signal.SIGQUIT, sighandler)
     signal.signal(signal.SIGTERM, sighandler)
     signal.signal(signal.SIGINT, sighandler)
     atexit.register(sighandler)
 
 
-def single_instance(path):
-    if os.path.exists(path):
-        try:
-            fd = os.open(path, os.O_WRONLY)
-            try:
-                os.write(fd, "a")
-            finally:
-                os.close(fd)
-            return False
-        except OSError as err:
-            pass
-    return True
+def single_instance(host, port):
+    sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    sck.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
+    try:
+        sck.connect((host, port))
+        sck.shutdown(socket.SHUT_RDWR)
+        return False
+    except socket.error:
+        return True
+    finally:
+        sck.close()
 
 def run(engine=None):
     if engine is None:
@@ -101,9 +113,10 @@ def run(engine=None):
     
     title = "%s v%d.%d.%d" % ((NAME,) + VERSION)
 
-    if not single_instance(engine.settings.fifo): sys.exit(0)
+    if not single_instance(engine.settings.host, engine.settings.port):
+        sys.exit(0)
     window = Window(engine)
-    makefifo(engine.settings.fifo, window)
+    startserver(engine.settings.host, engine.settings.port, window)
     window.set_title(title)
     window.connect("delete-event", window_deleteevent(window))
 

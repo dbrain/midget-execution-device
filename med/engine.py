@@ -33,6 +33,8 @@ class Settings(object):
         self.run_at_login = False
         self.show_at_startup = True
         self.browser = "gnome-www-browser"
+        self.host = "127.0.0.1"
+        self.port = 19840
 
 class Engine(gobject.GObject):
     VAR_REGEX = re.compile(r"\${([^}]+)}")
