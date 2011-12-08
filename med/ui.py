@@ -130,7 +130,7 @@ class Window(gtk.Window):
             if not result:
                 self.hide()
             else:
-                self.entry.set_text(''.join(['=', str(result)]))
+                self.entry.set_text(str(result))
                 self.entry.set_position(-1)
         except BadCommandException as e:
             dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, e.message)
