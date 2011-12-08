@@ -6,18 +6,19 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 import os
 import re
+import logging
 
 import gobject
 
@@ -66,7 +67,7 @@ class Engine(gobject.GObject):
         context["args"] = args
         context["u"] = urlquote
         context["engine"] = self
-        
+
         try:
             command = self.commands[cmdname]
         except KeyError:
@@ -79,9 +80,31 @@ class Engine(gobject.GObject):
             elif cmdname.startswith("/"):
                 BUILTINS["invoke"](context, ("gnome-terminal", "--working-directory=%s" % cmdname,))
                 return
+            elif cmdname.startswith("="):
+                maths = cmdname[1:] + ' '.join(args)
+                if re.match(r'.*[a-zA-Z]+.*', maths):
+                    raise BadCommandException("You mathed wrong: %s" % cmdname)
+                else:
+                    return BUILTINS["math"](context, (maths))
+            elif self.executable_exists(context, cmdname):
+                BUILTINS["invoke"](context, (cmdname, ' '.join(args)))
+                return
             else:
-                raise BadCommandException("unknown command: %s" % cmdname)
+                raise BadCommandException("Command not found: %s" % cmdname)
         command[0](context, self.exprsubst(context, command[1]))
+
+    def executable_exists(self, context, cmdname):
+        foundexe = self.is_executable(cmdname)
+        if not foundexe:
+            for path in context["env"]["PATH"].split(os.pathsep):
+                full_path = os.path.join(path, cmdname)
+                if self.is_executable(full_path):
+                    foundexe = True
+                    return foundexe
+        return foundexe
+
+    def is_executable(self, exe):
+        return os.path.exists(exe) and os.access(exe, os.X_OK)
 
     def expr(self, context, arg):
         def subn_cb(match):
