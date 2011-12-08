@@ -46,6 +46,10 @@ Think about some alternatives.
 
 Everything I've read about this sounds like pain. There has to be a better way.
 
+## Third-Party Integration
+
+Allow third party applications to interact with the app e.g. via the TCP socket.
+
 ## PyPI package.
 
 Publish this app to PyPI.
