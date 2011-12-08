@@ -89,6 +89,8 @@ class Window(gtk.Window):
         
         self.engine = engine
 
+        self.set_icon(get_icon_pixbuf())
+
         self.set_position(gtk.WIN_POS_CENTER)
         self.set_decorated(False)
         self.set_has_frame(False)
